@@ -6,6 +6,7 @@ to generate 2D drawings using the 2D turtle graphics library.
 
 author: Jackson Majewski
 """
+
 import turtle
 
 # green tones palette
@@ -17,18 +18,78 @@ import turtle
 
 # more colorful palette
 PALETTE = [
-    'tomato', 'dark blue', 'violet', 'thistle', 'burlywood', 'indigo', 'violet red', 'orange', 'crimson', 'peru',
-    'teal', 'coral', 'olive drab', 'maroon', 'orchid', 'sienna', 'turquoise', 'indian red',
-    'tan', 'chocolate', 'green yellow'
+    "tomato",
+    "dark blue",
+    "violet",
+    "thistle",
+    "burlywood",
+    "indigo",
+    "violet red",
+    "orange",
+    "crimson",
+    "peru",
+    "teal",
+    "coral",
+    "olive drab",
+    "maroon",
+    "orchid",
+    "sienna",
+    "turquoise",
+    "indian red",
+    "tan",
+    "chocolate",
+    "green yellow",
 ]
 
 
-def apply_l_system(rules: list, 
-                   axiom: str, 
-                   rewriting_steps: int, 
-                   ) -> str:
+def draw_l_system(l_system: str, rotation_angle: int, line_length: float) -> None:
+    # Loop through l_system and evaluate based on alphabet
+    for char in l_system:
+        match char:
+            case "F" | "G":
+                print("forward(" + str(line_length) + ")")
+                turtle.forward(line_length)
+            case "f":
+                print("pen up")
+                turtle.penup()
+
+                print("forward(" + str(line_length) + ")")
+                turtle.forward(line_length)
+                print("pen down")
+                turtle.pendown()
+            case "+":
+                print("left(" + str(rotation_angle) + ")")
+                turtle.left(rotation_angle)
+            case "-":
+                print("right(" + str(rotation_angle) + ")")
+                turtle.right(rotation_angle)
+
+
+def parse_rules(raw_rules: list) -> list:
+    """
+    A function used to convert the strings of rules into an easily searchable
+    nested list of strings, much like a rudimentary dictionary/hash map
+    :param raw_rules: A list containing rules for an L-system in the form P=S,
+    where P is a single symbol, and S is the string to replace it with
+    """
+    parsed_rules = []
+    for i in range(len(raw_rules)):
+        kvp = raw_rules[i].split("=")
+        parsed_rules.append([kvp[0], kvp[1]])
+
+    return parsed_rules
+
+
+def apply_l_system(
+    rules: list,
+    axiom: str,
+    rewriting_steps: int,
+) -> str:
     """
     A function used to calculate the result of an l-system
+    :param rules: A nested list of rules, as returned by parse_rules()
+    :param axiom: The initial axiom/state of the l-system
+    :param rewriting_steps: How many times to iterate on the l-system
     :return: str
     """
     # Setup initial state for L-system
@@ -37,19 +98,21 @@ def apply_l_system(rules: list,
 
     # Loop through for all rewriting_steps
     for i in range(rewriting_steps - 1):
-
         # Set to work on last system
         previous_system = current_system
+        current_system = ""
 
-        # See if you can use dictionary/hash map
+        # Loop character by character and compare each value to our rules
         for char in previous_system:
-            match char:
-                case 'F':
-                    print("meow")
-                case 'G':
-                    print("meow")
+            for rule in rules:
+                if rule[0] == char:
+                    current_system += rule[1]
+                    break
+            # If it didn't find the rule, just append the character
+            else:
+                current_system += char
 
-    return "Meow"
+    return current_system
 
 
 def main() -> None:
@@ -60,36 +123,47 @@ def main() -> None:
     :return: None
     """
 
-    #TODO:
-    # 1. Prompt for Axiom
-    # 2. Prompt for number of production rules (positive int)
-    # 3. Prompt for production rules one at a time (format P = S, P is single symbol, S is string)
-    # 4. Prompt for angle of rotation used for all Left / Right commands (int 0-360)
-    # 5. Prompt for initial length of line segment used for forward (positive float)
-    # 6. Prompt for intial turtle's heading (int 0-360 inclusive)
-    # 7. Prompt for number of rewriting steps (pos. int)
+    # TODO:
     # 8. Apply L-system and print (REMEMBER AXIOM IS ALWAYS FIRST STEP)
     # 9. Interpret, draw, and and print turtle command
     # 10. Idle on main loop
 
     # Welcome text
     print("Welcome to the L-system drawing generator!")
-    
+
     # Prompt for axiom and rules
     axiom = input("Enter axiom (initial string): ")
     rule_count = int(input("Enter the number of rules: "))
 
     # Get each rule
-    rules = {}
+    raw_rules = []
     for i in range(rule_count):
-        rules[i] = input("Enter rule #" + str(i) + ": ")
+        raw_rules.append(input("Enter rule #" + str(i) + ": "))
 
     # Prompt for turtle specific information
     rotation_angle = int(input("Enter angle of rotation: "))
-    line_legth = float(input("Enter initial line segment's length: "))
-    turtle.setheading(int(input("Enter initial heading: ")))
+    line_length = float(input("Enter initial line segment's length: "))
+    turtle_heading = int(input("Enter initial heading: "))
     rewriting_steps = int(input("Enter number of steps: "))
 
-    
-    if __name__ == '__main__':
-        main()
+    print("Generating the string...")
+
+    # Parse rule strings into a nested list
+    rules = parse_rules(raw_rules)
+
+    # Apply L-system to the axiom
+    l_system = apply_l_system(rules, axiom, rewriting_steps)
+    print("Result:")
+    print(l_system)
+
+    # Draw L-System to screen with turtle
+    print("Drawing...")
+    turtle.heading = turtle_heading
+    draw_l_system(l_system, rotation_angle, line_length)
+
+    # Wait until user exits the program
+    turtle.mainloop()
+
+
+if __name__ == "__main__":
+    main()
